@@ -1,7 +1,10 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:entrega_3_apps_moviles/pages/agregarjuegos.dart';
+import 'package:entrega_3_apps_moviles/pages/detallejuegos.dart';
 import 'package:entrega_3_apps_moviles/services/firestore_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 class ListaJuegos extends StatelessWidget {
   const ListaJuegos({super.key});
@@ -27,10 +30,53 @@ class ListaJuegos extends StatelessWidget {
                 itemCount: snapshot.data!.docs.length,
                 itemBuilder: (context,index){
                   var juego = snapshot.data!.docs[index];
-                  return ListTile(
-                    leading: const Icon(Icons.gamepad),
-                    title: Text('${juego['nombre']}'),
-                    subtitle:Text('${juego["estado"]}'),
+                  return Slidable(
+                    endActionPane: ActionPane(
+                      motion: const ScrollMotion(),
+                      children:[
+                        SlidableAction(
+                          icon: Icons.delete,
+                          label:"Borrar",
+                          backgroundColor: Colors.red,
+                          onPressed: (context){
+                            showDialog(
+                              context: context,
+                              builder:(BuildContext context){
+                                return AlertDialog(
+                                  title: const Text("Borrar Juego"),
+                                  content: const Text("¿Estás seguro que quieres eliminar este juego?"),
+                                  actions: [
+                                    TextButton(
+                                      child: const Text("Cancelar"),
+                                      onPressed: (){
+                                        Navigator.of(context).pop();
+                                      }
+                                    ),
+                                    TextButton(
+                                      child: const Text("Eliminar"),
+                                      onPressed: (){
+                                        FirestoreService().borrarJuego(juego.id);
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                  ]
+                                );
+                              }
+                            );
+                            
+                          }
+                        ),
+                      ]
+                    ),
+                    child: ListTile(
+                      leading: const Icon(Icons.gamepad),
+                      title: Text('${juego['nombre']}'),
+                      subtitle:Text('${juego["estado"]}'),
+                      onTap: (){
+                        MaterialPageRoute route = MaterialPageRoute(builder: (context) => DetalleJuego(nombre: juego["nombre"], horasJugadas: juego["horas_jugadas"], fecha: juego["fecha"], estado: juego["estado"]));
+                        Navigator.push(context,route);
+                      }
+                    ),
                   );
                 }
               );
@@ -43,6 +89,8 @@ class ListaJuegos extends StatelessWidget {
           child: const Icon(Icons.add),
           onPressed: () {
             // Dirigir a la vista de agregar un nuevo juego.
+            MaterialPageRoute route = MaterialPageRoute(builder: (context) => const JuegoAgregarPage());
+            Navigator.push(context, route);
           },
         ),
     );
